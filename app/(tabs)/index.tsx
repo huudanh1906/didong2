@@ -1,232 +1,148 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, TextInput, Button } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, TouchableOpacity, Image, ImageBackground } from 'react-native';
 import axios from 'axios';
 import { useRouter } from 'expo-router';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart'; // Import ShoppingCartIcon
-import Slider from '../Slider';
+import { useState } from 'react';
 
-const HomeScreen = () => {
-  const [categories, setCategories] = useState([]);
-  const [featuredProducts, setFeaturedProducts] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+const backgroundImage = require("../../assets/images/background.png");
+
+const Login: React.FC = () => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState<string>('');
   const router = useRouter();
 
-  useEffect(() => {
-    // Fetch categories
-    axios.get('http://localhost:8000/admin/category')
-      .then(response => {
-        console.log("Categories:", response.data); // Log the fetched categories
-        setCategories(response.data);
-      })
-      .catch(error => {
-        console.error("Error fetching categories:", error);
-      });
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post('http://localhost:8000/login', {
+        username,
+        password,
+      }, {
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+      );
 
-    // Fetch featured products
-    axios.get('http://localhost:8000/admin/product')
-      .then(response => {
-        console.log("Featured Products:", response.data); // Log the fetched products
-        setFeaturedProducts(response.data);
-      })
-      .catch(error => {
-        console.error("Error fetching featured products:", error);
-      });
-  }, []);
-
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      axios.get(`http://localhost:8000/tim-kiem?search=${searchQuery}`)
-        .then(response => {
-          setSearchResults(response.data.data); // Assuming products are in 'data'
-        })
-        .catch(error => {
-          console.error("Error searching products:", error);
-        });
-    } else {
-      setSearchResults([]);
+      // Navigate to the home tab
+      router.navigate('/home'); // Use 'navigate' method if available
+    } catch (err) {
+      Alert.alert('Login Failed', 'Invalid username or password');
     }
-  };
-
-  const fetchProductsByCategory = (categorySlug) => {
-    if (!categorySlug) {
-      console.error('Category slug is undefined');
-      return;
-    }
-
-    axios.get(`http://localhost:8000/danh-muc/${categorySlug}`)
-      .then(response => {
-        console.log(`Products for category ${categorySlug}:`, response.data.data); // Log the products data
-        setFeaturedProducts(response.data.data || []); // Access the 'data' array here
-      })
-      .catch(error => {
-        console.error(`Error fetching products for category ${categorySlug}:`, error);
-      });
   };
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Welcome to the Shop</Text>
-        {/* Cart Button */}
-        <TouchableOpacity
-          style={styles.cartButton}
-          onPress={() => router.push('/Cart')} // Navigate to Cart.tsx
-        >
-          <ShoppingCartIcon style={styles.cartIcon} /> {/* Use ShoppingCartIcon */}
-        </TouchableOpacity>
-      </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search for products..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
+    <View style={styles.container}>
+      <ImageBackground source={backgroundImage} style={styles.background}>
+        <Image
+          source={require('../../assets/images/logoPS.png')}
+          style={styles.Logo}
         />
-        <Button title="Search" onPress={handleSearch} />
-      </View>
+        <Image
+          source={require('../../assets/images/controller.jpg')}
+          style={styles.reactLogo}
+        />
+        <Text style={styles.header}>Login</Text>
+        <Image
+          source={require('../../assets/images/controller.jpg')}
+          style={styles.reactLogo2}
+        />
 
-      <Slider />
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          autoCapitalize="none"
+          autoCorrect={false}
+        />
 
-      {/* Categories Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Categories</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
-          {categories.map((category) => (
-            <TouchableOpacity key={category.id} onPress={() => fetchProductsByCategory(category.slug)}>
-              <View style={styles.categoryItem}>
-                <Image source={{ uri: `http://localhost:8000/imgs/categorys/${category.image}` }} style={styles.categoryImage} />
-                <Text style={styles.categoryText}>{category.name}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Featured Products Section */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Featured Products</Text>
-        <View style={styles.productsGrid}>
-          {(searchResults.length > 0 ? searchResults : featuredProducts).map((product) => {
-            return (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.productItem}
-                onPress={() => {
-                  console.log(`Navigating to product detail for slug: ${product.slug}`); // Log the slug before navigation
-                  router.push(`/product-detail/${product.slug}`); // Navigate to the product detail screen with slug
-                }}
-              >
-                <Image
-                  source={{ uri: `http://localhost:8000/imgs/products/${product.image}` }}
-                  style={styles.productImage}
-                />
-                <Text style={styles.productName}>{product.name}</Text>
-                <Text style={styles.productPrice}>${product.price}</Text>
-              </TouchableOpacity>
-            );
-          })}
+        <View style={styles.button}>
+          <Button title="Login" onPress={handleLogin} />
         </View>
-      </View>
-    </ScrollView>
+
+        <View style={styles.registerContainer}>
+          <Text style={styles.registerText}>Don't have an account?</Text>
+          <TouchableOpacity onPress={() => router.navigate('/register')}>
+            <Text style={styles.registerLink}>Register</Text>
+          </TouchableOpacity>
+        </View>
+      </ImageBackground >
+    </View>
+
   );
 };
 
-export default HomeScreen;
-
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
+    justifyContent: 'center',
+    padding: 16,
+    backgroundColor: '#f5f5f5',
+  },
+  Logo: {
+    width: 100,
+    height: 100,
+    marginLeft: 695,
+  },
+  reactLogo: {
+    width: 30,
+    height: 30,
+    marginLeft: 680,
+    position: 'relative',
+    top: 30
+  },
+  reactLogo2: {
+    width: 30,
+    height: 30,
+    marginLeft: 790,
+    position: 'relative',
+    top: -64
   },
   header: {
-    padding: 20,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    flexDirection: 'row', // Align items in a row
-    justifyContent: 'space-between', // Space between header text and cart button
-  },
-  headerText: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 32,
+    textAlign: 'center',
   },
-  cartButton: {
-    backgroundColor: '#4CAF50', // Green background
-    padding: 10,
-    borderRadius: 5,
-  },
-  cartButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  searchInput: {
-    flex: 1,
+  input: {
+    height: 40,
+    borderColor: '#ddd',
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 5,
-    padding: 10,
-    marginRight: 10,
-  },
-  section: {
-    marginTop: 20,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginHorizontal: 20,
-    marginBottom: 10,
-  },
-  categoriesContainer: {
-    paddingHorizontal: 20,
-  },
-  categoryItem: {
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  categoryImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-  },
-  categoryText: {
-    marginTop: 5,
-    fontSize: 14,
-  },
-  productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-  },
-  productItem: {
-    width: '48%',
+    borderRadius: 4,
+    marginBottom: 16,
+    marginHorizontal: 50,
+    paddingHorizontal: 8,
     backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 10,
+  },
+  button: {
     marginBottom: 20,
+    marginHorizontal: 50,
   },
-  productImage: {
-    width: '100%',
-    height: 150,
-    borderRadius: 10,
+  registerContainer: {
+    marginTop: 20,
+    alignItems: 'center',
   },
-  productName: {
-    marginTop: 10,
+  registerText: {
     fontSize: 16,
-    fontWeight: 'bold',
   },
-  productPrice: {
-    marginTop: 5,
-    fontSize: 14,
-    color: '#555',
+  registerLink: {
+    fontSize: 16,
+    color: '#007BFF',
+    marginTop: 8,
   },
 });
+
+export default Login;

@@ -1,12 +1,12 @@
 // app/Cart.tsx
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, ScrollView, StyleSheet, Image } from 'react-native';
+import Toast from 'react-native-toast-message';
 
 const Cart = () => {
     const [cart, setCart] = useState<any[]>([]);
 
     useEffect(() => {
-        // Load cart from session storage or any persistent storage
         const storedCart = JSON.parse(sessionStorage.getItem('cart') || '[]');
         setCart(storedCart);
     }, []);
@@ -14,7 +14,7 @@ const Cart = () => {
     const handleRemoveFromCart = (id: number) => {
         const updatedCart = cart.filter(item => item.id !== id);
         setCart(updatedCart);
-        sessionStorage.setItem('cart', JSON.stringify(updatedCart)); // Update storage
+        sessionStorage.setItem('cart', JSON.stringify(updatedCart));
     };
 
     const handleIncreaseQuantity = (id: number) => {
@@ -25,7 +25,7 @@ const Cart = () => {
             return item;
         });
         setCart(updatedCart);
-        sessionStorage.setItem('cart', JSON.stringify(updatedCart)); // Update storage
+        sessionStorage.setItem('cart', JSON.stringify(updatedCart));
     };
 
     const handleDecreaseQuantity = (id: number) => {
@@ -36,17 +36,28 @@ const Cart = () => {
             return item;
         });
         setCart(updatedCart);
-        sessionStorage.setItem('cart', JSON.stringify(updatedCart)); // Update storage
+        sessionStorage.setItem('cart', JSON.stringify(updatedCart));
     };
 
-    // Calculate total price of the cart
+    const handleOrder = () => {
+        Toast.show({
+            text1: 'Order successfully!',
+            position: 'bottom',
+            visibilityTime: 3000, // Duration for which the toast is visible
+            autoHide: true,
+            type: 'success', // You can customize the toast type
+        });
+        setCart([]); // Reset the cart
+        sessionStorage.setItem('cart', JSON.stringify([])); // Clear storage
+    };
+
     const totalPrice = cart.reduce((total, item) => total + item.price * item.qty, 0);
 
     return (
         <ScrollView style={styles.container}>
-            <Text style={styles.title}>Giỏ hàng</Text>
+            <Text style={styles.title}>Your Cart</Text>
             {cart.length === 0 ? (
-                <Text style={styles.emptyMessage}>Giỏ hàng của bạn hiện đang trống.</Text>
+                <Text style={styles.emptyMessage}>Your cart is empty now.</Text>
             ) : (
                 <View>
                     {cart.map((item) => (
@@ -60,16 +71,18 @@ const Cart = () => {
                                     <Text style={styles.quantityText}>{item.qty}</Text>
                                     <Button title="+" onPress={() => handleIncreaseQuantity(item.id)} />
                                 </View>
-                                <Text>Tổng tiền: {item.price * item.qty} đ</Text>
+                                <Text>Total: {item.price * item.qty} đ</Text>
                                 <Button title="Xóa" onPress={() => handleRemoveFromCart(item.id)} />
                             </View>
                         </View>
                     ))}
                     <View style={styles.totalContainer}>
-                        <Text style={styles.totalText}>Tổng cộng: {totalPrice} đ</Text>
+                        <Text style={styles.totalText}>Cart Total: {totalPrice} đ</Text>
                     </View>
+                    <Button title="Order" onPress={handleOrder} color="#4CAF50" />
                 </View>
             )}
+            <Toast ref={(ref) => Toast.setRef(ref)} />
         </ScrollView>
     );
 };
